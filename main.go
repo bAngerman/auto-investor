@@ -1,11 +1,7 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/bAngerman/auto-investor/morestrings"
-)
+import "log"
 
 func main() {
-	fmt.Println(morestrings.ReverseRunes("!oG ,olleH"))
+	log.Println("Start program")
 }
