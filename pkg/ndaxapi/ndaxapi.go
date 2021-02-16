@@ -2,6 +2,7 @@ package ndaxapi
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/url"
 	"os"
@@ -27,6 +28,7 @@ type Data struct {
 }
 
 var (
+	conn               *websocket.Conn
 	wsHost, wsPath     string
 	username, password string
 
@@ -105,7 +107,14 @@ func getSequence() int {
 	return (sequence + 2)
 }
 
-func authenticate(c *websocket.Conn) {
+func authenticate(c *websocket.Conn) error {
+	err := login(c)
+	err = authenticate2FA(c)
+
+	return err
+}
+
+func login(c *websocket.Conn) error {
 	p := Payload{
 		"UserName": username,
 		"Password": password,
@@ -121,17 +130,19 @@ func authenticate(c *websocket.Conn) {
 
 	if res["errormsg"] != nil {
 		discord.Message("Bad auth request: " + res["errormsg"].(string))
+		return errors.New(res["errormsg"].(string))
 	}
 
-	sToken = authenticate2FA(c, res)
+	return nil
 }
 
-func authenticate2FA(c *websocket.Conn, res Payload) string {
+func authenticate2FA(c *websocket.Conn) error {
 	time := time.Now()
 	key, err := totp.GenerateCode(twoFA, time)
 
 	if err != nil {
 		discord.Message("Bad 2FA generation: " + err.Error())
+		return err
 	}
 
 	p := Payload{
@@ -144,16 +155,17 @@ func authenticate2FA(c *websocket.Conn, res Payload) string {
 		Function: "Authenticate2FA",
 	}
 
-	res = sendRequest(c, r, p)
+	res := sendRequest(c, r, p)
 
 	if res["errormsg"] != nil {
 		discord.Message("Bad 2FA request: " + res["errormsg"].(string))
+		return errors.New(res["errormsg"].(string))
 	}
 
-	return res["SessionToken"].(string)
+	return nil
 }
 
-func ping(c *websocket.Conn) {
+func ping() {
 
 	p := Payload{}
 	r := Data{
@@ -162,52 +174,48 @@ func ping(c *websocket.Conn) {
 		Function: "Ping",
 	}
 
-	res := sendRequest(c, r, p)
+	res := sendRequest(conn, r, p)
 
-	log.Println("Ping:", res)
+	log.Printf("PING, %s", res["msg"])
+
+	if res["errormsg"] != nil {
+		discord.Message("Bad ping: " + res["errormsg"].(string))
+	}
 }
 
 // Start the ndaxio websocket process
-func Start() {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
+func Start() (*websocket.Conn, error) {
 	u := url.URL{
 		Scheme: "wss",
 		Host:   wsHost,
 		Path:   wsPath,
 	}
-	log.Printf("connecting to %s", u)
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
-	defer c.Close()
 
-	authenticate(c)
+	// Set to var to close later.
+	conn = c
 
-	return
+	err = authenticate(c)
+
+	return c, err
+}
+
+// Initloop the loop used for trading
+func Initloop(callback func()) {
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
 
 	done := make(chan struct{})
 
-	go func() {
-		defer close(done)
-		for {
-			t, message, err := c.ReadMessage()
+	pause := time.Second * 10
 
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-
-			log.Printf("type: %d", t)
-			log.Printf("recv: %s", message)
-		}
-	}()
-
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(pause)
 	defer ticker.Stop()
 
 	for {
@@ -217,14 +225,19 @@ func Start() {
 			return
 
 		case <-ticker.C:
-			ping(c)
+
+			// Always ping to keep conn alive.
+			ping()
+
+			callback()
 
 		case <-interrupt:
+
 			log.Println("interrupt")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				log.Println("write close:", err)
 				return
@@ -233,7 +246,10 @@ func Start() {
 			case <-done:
 			case <-time.After(time.Second):
 			}
+
+			conn.Close()
 			return
 		}
 	}
+
 }
