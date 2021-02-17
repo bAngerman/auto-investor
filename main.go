@@ -21,6 +21,7 @@ func init() {
 func main() {
 	log.Println("Starting auto trader.")
 
+	
 	_, err := ndaxapi.Start()
 
 	if err != nil {
