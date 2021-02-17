@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/bAngerman/auto-investor/pkg/ndaxapi"
-	account "github.com/bAngerman/auto-investor/pkg/ndaxapi/account"
 )
 
 // Start new paper trade strategy
@@ -22,5 +21,5 @@ func run() {
 }
 
 func checkAccount() {
-	acc := account.GetAccountPosition()
+	// acc := account.GetAccountPosition()
 }
