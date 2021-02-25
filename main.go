@@ -22,7 +22,12 @@ func init() {
 func main() {
 	log.Println("Starting auto trader.")
 
+<<<<<<< HEAD
 	conn, err := taskrunner.Start()
+=======
+	
+	_, err := ndaxapi.Start()
+>>>>>>> ec4c90ccf6d51092833942e3a6114b21e06e8d30
 
 	if err != nil {
 		log.Panic("Error connecting to NDAX:", err)
