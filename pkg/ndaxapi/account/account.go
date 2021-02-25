@@ -28,13 +28,13 @@ type Account struct {
 	TotalDayDepositNotional    float64 `json:"TotalDayDepositNotional"`    // 0,
 	TotalMonthDepositNotional  float64 `json:"TotalMonthDepositNotional"`  // 0,
 	TotalYearDepositNotional   float64 `json:"TotalYearDepositNotional"`   // 0,
-	TotalDayWithdraws          int64   `json:"TotalDayWithdraws"`          // 0,
-	TotalMonthWithdraws        int64   `json:"TotalMonthWithdraws"`        // 0,
-	TotalYearWithdraws         int64   `json:"TotalYearWithdraws"`         // 0,
-	TotalDayWithdrawNotional   int64   `json:"TotalDayWithdrawNotional"`   // 0,
-	TotalMonthWithdrawNotional int64   `json:"TotalMonthWithdrawNotional"` // 0,
-	TotalYearWithdrawNotional  int64   `json:"TotalYearWithdrawNotional"`  // 0,
-	NotionalProductID          int64   `json:"NotionalProductId"`          // 6,
+	TotalDayWithdraws          float64 `json:"TotalDayWithdraws"`          // 0,
+	TotalMonthWithdraws        float64 `json:"TotalMonthWithdraws"`        // 0,
+	TotalYearWithdraws         float64 `json:"TotalYearWithdraws"`         // 0,
+	TotalDayWithdrawNotional   float64 `json:"TotalDayWithdrawNotional"`   // 0,
+	TotalMonthWithdrawNotional float64 `json:"TotalMonthWithdrawNotional"` // 0,
+	TotalYearWithdrawNotional  float64 `json:"TotalYearWithdrawNotional"`  // 0,
+	NotionalProductID          float64 `json:"NotionalProductId"`          // 6,
 	NotionalProductSymbol      string  `json:"NotionalProductSymbol"`      // "USD",
 	NotionalValue              float64 `json:"NotionalValue"`              // 267.86320000000000000000000000,
 	NotionalHoldAmount         float64 `json:"NotionalHoldAmount"`         // 0.00,
@@ -46,6 +46,10 @@ type Accounts []Account
 
 type getUserAccountsResponse []int
 
+// AccountID of the user
+// Stored so we do not have to re-request it.
+var AccountID int = -1
+
 func init() {
 	godotenv.Load()
 }
@@ -55,6 +59,10 @@ func GetUserAccountID(conn *websocket.Conn) int {
 	omsID := 1
 	username := os.Getenv("NDAXIO_USER")
 	userID := auth.UserID
+
+	if AccountID != -1 {
+		return AccountID
+	}
 
 	p := ndaxapi.Payload{
 		"OMSId":    omsID,
@@ -79,6 +87,7 @@ func GetUserAccountID(conn *websocket.Conn) int {
 
 	// Return first in arr.
 	if len(accounts) > 0 {
+		AccountID = accounts[0]
 		return accounts[0]
 	}
 
@@ -86,7 +95,7 @@ func GetUserAccountID(conn *websocket.Conn) int {
 }
 
 // GetAccountPosition will call the API, and return the account status
-func getAccountPosition(conn *websocket.Conn) Accounts {
+func GetAccountPosition(conn *websocket.Conn) Accounts {
 
 	accID := GetUserAccountID(conn)
 
