@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/bAngerman/auto-investor/pkg/ndaxapi/account"
+	"github.com/bAngerman/auto-investor/pkg/ndaxapi/order"
 	"github.com/bAngerman/auto-investor/pkg/taskrunner"
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/websocket"
@@ -34,13 +35,17 @@ func Start(conn *websocket.Conn) {
 func run() {
 	log.Println("Running tasks.")
 
-	checkAccount()
+	checkStatus()
 	// Check account status
 	// Evaluate current trade statuses
 	// Offer new trade statuses
 	// If any events to report, discord DM them
 }
 
-func checkAccount() {
-	account.GetAccountPosition(c)
+func checkStatus() {
+	_ = account.GetAccountPosition(c)
+	_ = order.GetOpenOrders(c)
+
+	// log.Println(accounts)
+	// log.Println(trades)
 }
