@@ -1,15 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
-	"github.com/bAngerman/auto-investor/pkg/ndaxapi"
 	"github.com/bAngerman/auto-investor/pkg/strategy/livetrade"
 	"github.com/bAngerman/auto-investor/pkg/strategy/papertrade"
-	cli "github.com/bAngerman/auto-investor/utils"
-
+	"github.com/bAngerman/auto-investor/pkg/taskrunner"
 	"github.com/joho/godotenv"
+	"github.com/manifoldco/promptui"
 )
 
 func init() {
@@ -18,22 +18,35 @@ func init() {
 		log.Panic("Error parsing .env file:", err)
 	}
 }
+
 func main() {
 	log.Println("Starting auto trader.")
 
-	_, err := ndaxapi.Start()
+	conn, err := taskrunner.Start()
 
 	if err != nil {
-		log.Panic("Error connecting to NDAX.")
+		log.Panic("Error connecting to NDAX:", err)
 	}
-	log.Println("Connected, and authenticated to NDAX.")
+
+	log.Println("Connected and authenticated to NDAX.")
 
 	if os.Getenv("ENV") == "live" {
-		log.Println(".env states to use live API and real money, are you sure? (y/n)")
-		if cli.Askforconfirmation() {
-			livetrade.Start()
+		prompt := promptui.Prompt{
+			Label:     ".env states to use live API and real money, are you sure? (y/n)",
+			IsConfirm: true,
+		}
+
+		result, err := prompt.Run()
+
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+			return
+		}
+
+		if result == "y" {
+			livetrade.Start(conn)
 		}
 	} else {
-		papertrade.Start()
+		papertrade.Start(conn)
 	}
 }

@@ -3,13 +3,13 @@ package livetrade
 import (
 	"log"
 
-	"github.com/bAngerman/auto-investor/pkg/ndaxapi"
+	"github.com/gorilla/websocket"
 )
 
 // Start new live trade strategy
-func Start() {
+func Start(conn *websocket.Conn) {
 	log.Println("Using livetrade strategy")
-	ndaxapi.Initloop(loop)
+	// ndaxapi.Initloop(loop)
 }
 
 func loop() {
