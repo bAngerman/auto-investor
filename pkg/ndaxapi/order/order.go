@@ -6,14 +6,13 @@ import (
 
 	"github.com/bAngerman/auto-investor/pkg/ndaxapi"
 	"github.com/bAngerman/auto-investor/pkg/ndaxapi/account"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/websocket"
 )
 
 // Order is the order data from the API
 type Order struct {
 	Side                 string  `json:"Side"`                 // "Sell",
-	OrderID              int64   `json:"OrderId"`              // 14307301634,
+	ID                   int64   `json:"OrderId"`              // 14307301634,
 	Price                int64   `json:"Price"`                // 1,
 	Quantity             float64 `json:"Quantity"`             // 100,
 	DisplayQuantity      float64 `json:"DisplayQuantity"`      // 100,
@@ -83,7 +82,7 @@ func GetOpenOrders(conn *websocket.Conn) Orders {
 		log.Panic(err)
 	}
 
-	spew.Dump(orders)
+	// spew.Dump(orders)
 
 	return orders
 }

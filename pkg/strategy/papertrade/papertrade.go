@@ -5,8 +5,9 @@ import (
 
 	"github.com/bAngerman/auto-investor/pkg/ndaxapi/account"
 	"github.com/bAngerman/auto-investor/pkg/ndaxapi/order"
-	"github.com/bAngerman/auto-investor/pkg/taskrunner"
-	"github.com/boltdb/bolt"
+	"github.com/bAngerman/auto-investor/pkg/ndaxapi/ticker"
+	"github.com/bAngerman/auto-investor/pkg/strategy/papertrade/paperholdings"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -14,38 +15,43 @@ var (
 	c *websocket.Conn
 )
 
-func init() {
-	// Initialize the database, if it does not have a db, it will create one.
-	_, err := bolt.Open("paper", 0600, nil)
-	if err != nil {
-		log.Panic("Error creating paper db:", err)
-	}
-}
-
 // Start new paper trade strategy
-func Start(conn *websocket.Conn) {
+func Start(conn *websocket.Conn, tickerChan chan ticker.StructuredData) {
 	// Set to package var.
 	c = conn
 
 	log.Println("Using papertrade strategy")
-	taskrunner.Initloop(conn, run)
-
 }
 
 func run() {
-	log.Println("Running tasks.")
+	// log.Println("Running tasks.")
 
-	checkStatus()
-	// Check account status
-	// Evaluate current trade statuses
-	// Offer new trade statuses
-	// If any events to report, discord DM them
+	// Get current account holdings
+	// accounts, orders := evaluateHoldings()
+
+	// Evaluate whether trades should execute.
+	// shouldTradesExecute(accounts, orders)
+
+	// // Freshen accounts / orders
+	// accounts, orders = evaluateHoldings()
+
+	// // Offer new trade statuses based on account / orders
+	// submitNewTrades(accounts, orders)
 }
 
-func checkStatus() {
-	_ = account.GetAccountPosition(c)
-	_ = order.GetOpenOrders(c)
+func evaluateHoldings() (account.Accounts, order.Orders) {
 
-	// log.Println(accounts)
-	// log.Println(trades)
+	// Get fake values for paper trading
+	accounts := paperholdings.GetAccountPositions()
+	orders := paperholdings.GetOpenOrders()
+
+	return accounts, orders
 }
+
+// func shouldTradesExecute(account.Accounts, order.Orders) bool {
+
+// }
+
+// func submitNewTrades(account.Accounts, order.Orders) {
+
+// }

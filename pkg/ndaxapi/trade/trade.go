@@ -13,7 +13,7 @@ import (
 type Trade struct {
 	OmsID                    int64   `json:"OMSId"`                    // 1,
 	ExecutionID              int64   `json:"ExecutionId"`              // 675528,
-	TradeID                  int64   `json:"TradeId"`                  // 429092,
+	ID                       int64   `json:"TradeId"`                  // 429092,
 	OrderID                  int64   `json:"OrderId"`                  // 14297295238,
 	AccountID                int64   `json:"AccountId"`                // 32087,
 	AccountName              string  `json:"AccountName"`              // "brendan.angerman@gmail.com",

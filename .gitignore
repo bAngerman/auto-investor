@@ -1,12 +1,14 @@
 # Environment files
 .env
 
-# Binaries for programs and plugins
+# Binaries for programs and plugins, and databases
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+*.db
+*.lock
 
 # Test binary, built with `go test -c`
 *.test

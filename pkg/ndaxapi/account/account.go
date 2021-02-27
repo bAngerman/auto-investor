@@ -15,7 +15,7 @@ import (
 // Account is the structure of an account in NDAX
 type Account struct {
 	OMSId                      int64   `json:"OMSId"`                      // 1,
-	AccountID                  int64   `json:"AccountId"`                  // 32087,
+	ID                         int64   `json:"AccountId"`                  // 32087,
 	ProductSymbol              string  `json:"ProductSymbol"`              // "BTC",
 	ProductID                  int64   `json:"ProductId"`                  // 1,
 	Amount                     float64 `json:"Amount"`                     // 0,
@@ -82,7 +82,7 @@ func GetUserAccountID(conn *websocket.Conn) int {
 	err := json.Unmarshal([]byte(data.Response), &accounts)
 
 	if err != nil {
-		log.Panic("Error getting user account ID:", err)
+		log.Panic("Empty response when getting accounts.")
 	}
 
 	// Return first in arr.

@@ -3,6 +3,8 @@ package ndaxapi
 import (
 	"encoding/json"
 	"log"
+	"net/url"
+	"os"
 
 	"github.com/bAngerman/auto-investor/pkg/discord"
 	"github.com/gorilla/websocket"
@@ -31,26 +33,35 @@ type GenericResponse struct {
 type pingResponse map[string]interface{}
 
 var (
-	instruments map[string]int
-	sequence    int
+	instruments    map[string]int
+	sequence       int
+	wsHost, wsPath string
 )
 
 func init() {
 	godotenv.Load()
 
-	// instruments = map[string]int{
-	// 	"BTCCAD":  1,
-	// 	"BCHCAD":  2,
-	// 	"ETHCAD":  3,
-	// 	"XRPCAD":  4,
-	// 	"LTCCAD":  5,
-	// 	"EOSCAD":  75,
-	// 	"XLMCAD":  76,
-	// 	"DOGECAD": 77,
-	// 	"ADACAD":  78,
-	// }
+	wsHost = os.Getenv("NDAXIO_WS_HOST")
+	wsPath = os.Getenv("NDAXIO_WS_PATH")
 
 	sequence = 2
+}
+
+// Connect to the NDAX websocket connection
+func Connect() (*websocket.Conn, error) {
+	u := url.URL{
+		Scheme: "wss",
+		Host:   wsHost,
+		Path:   wsPath,
+	}
+
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+
+	if err != nil {
+		log.Fatal("Error connecting to ws:", err)
+	}
+
+	return conn, err
 }
 
 // SendRequest executes a write to the websocket connection
